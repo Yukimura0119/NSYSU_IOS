@@ -59,14 +59,14 @@ void proc_pipe(char** argv, char** argv2) {
             close(fd[1]);
             execvp(argv[0], argv);
             perror("Command error");
-            _exit(0);
+            _exit(1);
         } else {
             close(fd[1]);
             dup2(fd[0], 0);
             close(fd[0]);
             execvp(argv2[0], argv2);
             perror("Command error");
-            _exit(0);
+            _exit(1);
         }
     } else
         waitpid(pid, NULL, 0);
