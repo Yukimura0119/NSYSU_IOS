@@ -42,24 +42,26 @@ void proc_single(char** argv) {
     if (pid == 0) {
         execvp(argv[0], argv);
         perror("Command error");
-        _exit(0);
+        _exit(1);
     } else
         waitpid(pid, NULL, 0);
 }
 
 void proc_pipe(char** argv, char** argv2) {
-    int fd[2];
-    pipe(fd);
     pid_t pid = fork();
     if (pid == 0) {
+        int fd[2];
+        pipe(fd);
         pid_t pid2 = fork();
         if (pid2 == 0) {
+            close(fd[0]);
             dup2(fd[1], 1);
             close(fd[1]);
             execvp(argv[0], argv);
             perror("Command error");
             _exit(0);
         } else {
+            close(fd[1]);
             dup2(fd[0], 0);
             close(fd[0]);
             execvp(argv2[0], argv2);
@@ -75,7 +77,7 @@ void proc_bg(char** argv) {
     if (pid == 0) {
         execvp(argv[0], argv);
         perror("Command error");
-        _exit(0);
+        _exit(1);
     }
 }
 
@@ -91,7 +93,7 @@ void proc_right(char** argv, char** argv2) {
         close(f);
         execvp(argv[0], argv);
         perror("Command error");
-        _exit(0);
+        _exit(1);
     } else
         waitpid(pid, NULL, 0);
 }
@@ -108,10 +110,11 @@ void proc_left(char** argv, char** argv2) {
         close(f);
         execvp(argv[0], argv);
         perror("Command error");
-        _exit(0);
+        _exit(1);
     } else
         waitpid(pid, NULL, 0);
 }
+
 int main() {
     while (1) {
         char buf[64], *argv[64], *argv2[64];
