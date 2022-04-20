@@ -116,6 +116,7 @@ void proc_left(char** argv, char** argv2) {
 }
 
 int main() {
+    printf("Aroha\n");
     while (1) {
         char buf[64], *argv[64], *argv2[64];
         int type = 0;
@@ -149,5 +150,6 @@ int main() {
                 break;
         }
     }
+    printf("Bye Bye\n");
     return 0;
 }
