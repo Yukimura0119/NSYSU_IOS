@@ -13,7 +13,7 @@ typedef struct block_node {
 
 static block_node head = {0, NULL};
 
-static const size_t unit_size = 16;
+static const size_t unit_size = 8;
 static const size_t header_size = sizeof(block_node);
 static inline size_t align(size_t size) {
     // return ((size - 1) / _align + 1) * _align;
@@ -26,6 +26,14 @@ void* mymalloc(size_t size) {
 
     for (block_node *nowBlock = head.next, *prev = &head; nowBlock != NULL;
          nowBlock = nowBlock->next, prev = prev->next) {
+        if (nowBlock->size >= unit_size + size + header_size) {
+            size_t remain = nowBlock->size - size - header_size;
+            block_node* newBlock = (void*)nowBlock + header_size + remain;
+            nowBlock->size = remain;
+            newBlock->free = 0;
+            newBlock->size = size;
+            return ((void*)newBlock + header_size);
+        }
         if (nowBlock->size >= size) {
             prev->next = nowBlock->next;
             nowBlock->free = 0;
@@ -40,8 +48,8 @@ void* mymalloc(size_t size) {
 
 void myfree(void* ptr) {
     block_node* block = (block_node*)(ptr - header_size);
-    assert(block->free == 0);
     printf("free: %p\n", (void*)block);
+    assert(block->free == 0);
     block->next = head.next;
     head.next = block;
     block->free = 1;
@@ -49,7 +57,7 @@ void myfree(void* ptr) {
 
 void* myrealloc(void* ptr, size_t size) {
     if (!ptr) return mymalloc(size);
-    block_node* block = (block_node*)(ptr - header_size);
+    block_node* block = ptr - header_size;
 
     if (block->size >= align(size)) return ptr;
 
@@ -62,7 +70,11 @@ void* myrealloc(void* ptr, size_t size) {
     return ((void*)newBlock);
 }
 
-void* mycalloc(size_t nmemb, size_t size) { return mymalloc(nmemb * size); }
+void* mycalloc(size_t nmemb, size_t size) {
+    void* block = mymalloc(nmemb * size);
+    memset(block, 0, nmemb * size);
+    return block;
+}
 
 void scan() {
     printf("\nFree blocks:\n");
